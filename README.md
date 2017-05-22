@@ -1,13 +1,14 @@
 # COMPUTACAO-GRAFICA  
 Trabalho semanal da disciplina  
-
-
+  
+  
 ###### cube.html  
 Apenas para aprendizado e teste  
 * v1.0 - Gera um cubo simples 1x1x1, e o exibe
 * v1.1 - Adicionado rotação, apenas para melhor visualização do 3D 
-
-
+* v1.2 - Modificado o material do cubo e adicionado luz direcional  
+  
+  
 ###### objloader.html  
 Arquivo principal, base para a continuidade do projeto da disciplina  
 * v1.0 - Extraído do exemplo do three.js (https://threejs.org/examples/webgl_loader_obj.html)  

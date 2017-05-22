@@ -26,7 +26,7 @@
 	</head>
 	<body>
 		<div id="info">
-			<center><h3>CUBE v1.1<h3></center>
+			<center><h3>CUBE v1.2<h3></center>
 		</div>
 
     <script src="OBJLoader.js"></script>
@@ -36,33 +36,31 @@
 			//Inicializando as variaveis camera e scene
 			var scene = new THREE.Scene();
 			//PerspectiveCamera(perspectiva, escala, distancia minima, distancia maxima)
-			var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			var camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.1, 1000 );
+			//Move um pouco a camera, para que esta nao fique dentro do cubo
+			camera.position.z = 5;
+
+			//Luz direcionada
+			var dlight = new THREE.DirectionalLight ( 0xffcc66, 0.6);
+			dlight.position.set (2, 2, 5);
+			scene.add (dlight);
+
+			//Cria um cubo 1x1x1, com material tipo Phong, que é altamente reflexivo (para testar a luz)
+			var geometry = new THREE.BoxGeometry (1, 1, 1);
+			var material = new THREE.MeshPhongMaterial( { color: 0xffffff, shininess: 100, specular: 0xffffff, emissive: 0xcc5533 } );
+			var cube = new THREE.Mesh( geometry, material );
+			scene.add( cube );		
 
 			//Renderer eh o que faz tudo funcionar "por tras dos panos"
 			var renderer = new THREE.WebGLRenderer({alpha: true});	
 			renderer.setSize( window.innerWidth, window.innerHeight );	//tamanho do display a ser exibido dentro do navegador
-			document.body.appendChild( renderer.domElement );	//nao sei exatamente o q isso faz, mas faz parte da renderizacao
-
-			//Carrega um objeto da memoria
-
-
-			//Cria um cubo 1x1x1
-			var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
-			var cube = new THREE.Mesh( geometry, material );
-			scene.add( cube );
-			//Move um pouco a camera, para que esta nao fique dentro do cubo
-			camera.position.z = 5;
-			
-			
-			
-			//Ajustando um pouco o angulo do cubo, para facilitar a visualizacao
-			cube.rotation.x = 15;
-			
+			document.body.appendChild( renderer.domElement );	//nao sei exatamente o q isso faz, mas faz parte da renderizacao			
 
 			//Renderiza tudo o que eh para ser exibido e atualiza a tela a 60fps
 			function render() {
-				cube.rotation.z += 0.01;	//rotacao do cubo, como eh super simples, eu deixei
+				cube.rotation.x += 0.01;
+				cube.rotation.y += 0.01;
+				cube.rotation.z += 0.01;
 				requestAnimationFrame( render );
 				renderer.render( scene, camera );
 			}
