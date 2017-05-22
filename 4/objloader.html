@@ -1,19 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 	<head>
+		<meta charset=utf-8>
 		<title>COMPUTACAO GRAFICA</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
 			body {
 				font-family: Monospace;
-				background-color: #000;
-				color: #fff;
+				background-color: #fff;
+				color: #000;
 				margin: 0px;
 				overflow: hidden;
 			}
 			#info {
-				color: #fff;
+				color: #000;
 				position: absolute;
 				top: 10px;
 				width: 100%;
@@ -21,57 +22,40 @@
 				z-index: 100;
 				display:block;
 			}
-			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
 		</style>
 	</head>
 
 	<body>
 		<div id="info">
-			<center><h3>OBJECT LOADER + DISPLAY - SIMPLES v1.0<h3></center>
+			<center><h3>OBJLOADER SIMPLES v1.1<h3></center>
 		</div>
 
 		<script src="three.js"></script>
 		<script src="OBJLoader.js"></script>
 
 		<script>
-
 			var container;
-
 			var camera, scene, renderer;
 
-
 			init();
-			animate();
-
+			render();
 
 			function init() {
-
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
-				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 2000 );
 				camera.position.z = 250;
 
-				// scene
-
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0xffffff );
 
-				var directionalLight = new THREE.DirectionalLight( 0xFFFFFF );
-				directionalLight.position.set( 0, 0, 1 );
-				scene.add( directionalLight );
-
-				// texture
-
+				//MANAGER: ainda nao sei exatamente o que faz, mas eh necessario para chamar o objloader
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
-
 					console.log( item, loaded, total );
-
 				};
 
-				var texture = new THREE.Texture();
-
+				//ONPROGRESS: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
 				var onProgress = function ( xhr ) {
 					if ( xhr.lengthComputable ) {
 						var percentComplete = xhr.loaded / xhr.total * 100;
@@ -79,28 +63,15 @@
 					}
 				};
 
+				//ONERROR: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
 				var onError = function ( xhr ) {
 				};
 
-
-				// model
-
+				//LOADER: CARREGA UM OBJETO(.obj) DA MEMORIA E O ADICIONA NA CENA
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'male.obj', function ( object ) {
-
-					object.traverse( function ( child ) {
-
-						if ( child instanceof THREE.Mesh ) {
-
-							child.material.map = texture;
-
-						}
-
-					} );
-
-					object.position.y = - 95;
+				loader.load( 'female.obj', function ( object ) {
 					scene.add( object );
-
+					object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto
 				}, onProgress, onError );
 
 				//
@@ -111,20 +82,11 @@
 				container.appendChild( renderer.domElement );
 			}
 
-			function animate() {
-
-				requestAnimationFrame( animate );
-				render();
-
-			}
-
 			function render() {
-
+				requestAnimationFrame( render );
 				renderer.render( scene, camera );
-
 			}
 
 		</script>
-
 	</body>
 </html>
