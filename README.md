@@ -4,7 +4,8 @@ Trabalho semanal da disciplina
 
 ###### cube.html  
 Apenas para aprendizado e teste  
-Gera um cubo simples 1x1x1, o exibe e rotaciona a cada frame  
+* v1.0 - Gera um cubo simples 1x1x1, e o exibe
+* v1.1 - Adicionado rotação, apenas para melhor visualização do 3D 
 
 
 ###### objloader.html  
