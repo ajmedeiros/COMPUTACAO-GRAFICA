@@ -71,11 +71,17 @@
 				var loader = new THREE.OBJLoader( manager );
 				loader.load( 'female.obj', function ( object ) {
 					scene.add( object );
+					object.position.x = 50;
 					object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto
 				}, onProgress, onError );
 
-				//
+				loader.load( 'male.obj', function ( object ) {
+					scene.add( object );
+					object.position.x = -50;
+					object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto
+				}, onProgress, onError );
 
+				//RENDERIZAÇÃO
 				renderer = new THREE.WebGLRenderer({alpha: true});
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
