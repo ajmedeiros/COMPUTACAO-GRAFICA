@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>COMPUTACAO GRAFICA</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #fff;
+				color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #000;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="info">
+			<center><h3>OBJLOADER SIMPLES v1.1<h3></center>
+		</div>
+
+		<script src="three.js"></script>
+		<script src="OBJLoader.js"></script>
+
+		<script>
+			var container;
+			var camera, scene, renderer;
+
+			init();
+			render();
+
+			function init() {
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.z = 250;
+
+				scene = new THREE.Scene();
+
+				//MANAGER: ainda nao sei exatamente o que faz, mas eh necessario para chamar o objloader
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
+					console.log( item, loaded, total );
+				};
+
+				//ONPROGRESS: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
+				var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
+					}
+				};
+
+				//ONERROR: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
+				var onError = function ( xhr ) {
+				};
+
+				//LOADER: CARREGA UM OBJETO(.obj) DA MEMORIA E O ADICIONA NA CENA
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'female.obj', function ( object ) {
+					scene.add( object );
+					object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto
+				}, onProgress, onError );
+
+				//
+
+				renderer = new THREE.WebGLRenderer({alpha: true});
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+			}
+
+			function render() {
+				requestAnimationFrame( render );
+				renderer.render( scene, camera );
+			}
+
+		</script>
+	</body>
+</html>
