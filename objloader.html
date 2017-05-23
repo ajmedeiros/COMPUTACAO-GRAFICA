@@ -48,33 +48,15 @@
 				camera.position.z = 250;
 
 				scene = new THREE.Scene();
-
-				//MANAGER: ainda nao sei exatamente o que faz, mas eh necessario para chamar o objloader
-				var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
-					console.log( item, loaded, total );
-				};
-
-				//ONPROGRESS: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
-				var onProgress = function ( xhr ) {
-					if ( xhr.lengthComputable ) {
-						var percentComplete = xhr.loaded / xhr.total * 100;
-						console.log( Math.round(percentComplete, 2) + '% downloaded' );
-					}
-				};
-
-				//ONERROR: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
-				var onError = function ( xhr ) {
-				};
-
+ 
 				//LOADER: CARREGA UM OBJETO(.obj) DA MEMORIA E O ADICIONA NA CENA
-				var loader = new THREE.OBJLoader( manager );
+				var loader = new THREE.OBJLoader( );
 				loader.load( 'female.obj', function ( object ) {
+					console.log(object);
 					scene.add( object );
 					object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto
-				}, onProgress, onError );
+				})
 
-				//
 
 				renderer = new THREE.WebGLRenderer({alpha: true});
 				renderer.setPixelRatio( window.devicePixelRatio );
