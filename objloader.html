@@ -36,6 +36,7 @@
 		<script>
 			var container;
 			var camera, scene, renderer;
+		
 
 			init();
 			render();
@@ -49,46 +50,40 @@
 
 				scene = new THREE.Scene();
 
-				//MANAGER: ainda nao sei exatamente o que faz, mas eh necessario para chamar o objloader
-				var manager = new THREE.LoadingManager();
-				manager.onProgress = function ( item, loaded, total ) {
-					console.log( item, loaded, total );
-				};
-
-				//ONPROGRESS: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
-				var onProgress = function ( xhr ) {
-					if ( xhr.lengthComputable ) {
-						var percentComplete = xhr.loaded / xhr.total * 100;
-						console.log( Math.round(percentComplete, 2) + '% downloaded' );
-					}
-				};
-
-				//ONERROR: tbm nao sei exatamente como funciona, mas eh necessario para chamar o objloader
-				var onError = function ( xhr ) {
-				};
+				
 
 				//LOADER: CARREGA UM OBJETO(.obj) DA MEMORIA E O ADICIONA NA CENA
-				var loader = new THREE.OBJLoader( manager );
+				var loader = new THREE.OBJLoader( );
 				loader.load( 'female.obj', function ( object ) {
+					console.log(object);
 					scene.add( object );
-					object.position.x = 50;
+					object.position.x = 50; //desloca para direita
 					object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto
-				}, onProgress, onError );
+				} )
 
-				loader.load( 'male.obj', function ( object ) {
-					scene.add( object );
-					object.position.x = -50;
-					object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto
-				}, onProgress, onError );
+ 				
+				loader.load( 'male.obj', function ( object2 ) {
+					console.log(object2);
+
+
+					var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				  	object2.add( directionalLight );
+
+					scene.add( object2 );
+
+					object2.position.x = -50; //desloca para esquerda
+					object2.position.y = -100; //desloca para baixo, apenas para "centralizar" o objeto
+
+				})
 
 				//RENDERIZAÇÃO
 				renderer = new THREE.WebGLRenderer({alpha: true});
-				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 			}
 
 			function render() {
+				
 				requestAnimationFrame( render );
 				renderer.render( scene, camera );
 			}
