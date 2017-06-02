@@ -10,3 +10,6 @@ Trabalho semanal da disciplina
 ###### fase2.html  
 * v1.2 - Carrega dois objetos
 * v1.3 - Rotação dos modelos e posição da câmera, iluminação direcionada de vários ângulos;
+
+##### fase3.html
+* v1.4 - Câmera em duas posições diferentes (duas câmeras), quatro objetos.
