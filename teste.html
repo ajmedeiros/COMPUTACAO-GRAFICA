@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>COMPUTACAO GRAFICA</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #fff;
+				color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #000;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="info">
+			<center><h3>OBJLOADER v1.2<h3></center>
+		</div>
+
+		<script src="three.js"></script>
+		<script src="OBJLoader.js"></script>
+
+		<script>
+			var container;
+			var camera, scene, renderer;
+			var obj1, obj3;
+		
+			init();
+			animate();
+			function init() {
+				m1 = new THREE.Matrix4();
+				m1.set(
+					1,  0,  0,  0,
+       				0,  1,  0,  0,
+       				0,  0,  1,  0,
+       				0,  0,  0,  1
+       			);
+				m3 = new THREE.Matrix4();
+				m3.set(
+					-1,  0,  0,  0,
+       				0,  -1,  0,  0,
+       				0,  0,  -1,  0,
+       				0,  0,  0,  -1
+       			);
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 2000 );
+				camera.position.z = 250;
+				scene = new THREE.Scene();
+				
+				//LOADER: CARREGA UM OBJETO(.obj) DA MEMORIA E O ADICIONA NA CENA
+				var loader = new THREE.OBJLoader( );
+				loader.load( 'female.obj', function ( object ) {
+					console.log(object);
+					object.applyMatrix(m1);
+	                object.rotation.x = 15;
+					
+					scene.add( object );
+					obj1 = object;
+				} )
+ 				
+				loader.load( 'male.obj', function ( object2 ) {
+					console.log(object2);
+					var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				  	object2.add( directionalLight );
+				  	object2.applyMatrix(m3);
+	                //object2.rotation.x = 15;
+	                obj3 = object2;
+					scene.add( object2 );
+				})
+				//RENDERIZAÇÃO
+				renderer = new THREE.WebGLRenderer({alpha: true});
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+			}
+			function animate() {												
+				requestAnimationFrame( animate );
+				render();
+			}
+			function render() {
+				
+				obj1.rotation.z += 0.01;	
+				obj3.rotation.z += 0.01;
+				renderer.render( scene, camera );
+			}
+		</script>
+	</body>
+</html>
