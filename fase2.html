@@ -31,37 +31,30 @@
 		</div>
 
 		<p>Clique no botao para trocar de camera</p>
+		<button onclick="trocaCamera1()">Camera1</button>
+		<button onclick="trocaCamera2()">Camera2</button>
 
-<button onclick="trocaCamera1()">Camera1</button>
-<button onclick="trocaCamera2()">Camera2</button>
-
-<p id="demo"></p>
-
-<script>
-function trocaCamera1() {
+		<p id="demo"></p>
+			
 	
-    // camera = camera1;
-}
-
-function trocaCamera2() {
-    // camera = camera2;
-}
-</script>
-
 		<script src="three.js"></script>
 		<script src="OBJLoader.js"></script>
 
 		<script>
+
 			var container;
-			var camera, scene, renderer;
+			var camera1, camera2, scene, renderer;
 			var obj1, obj3;
+			var qualcamera;
+			
+
+		
 
 			init();
 			animate();
 
 			function init() {
 
-				// Here
 				m1 = new THREE.Matrix4();
 				m1.set(
 					1,  0,  0,  0,
@@ -86,17 +79,30 @@ function trocaCamera2() {
 					0, 0, 1, 350,
 				 	0, 0, 0, 1
 				);
-				//Here
 
 
+
+				m4 = new THREE.Matrix4();
+				m4.set(
+					1, 0, 0, 80,
+					0, 1, 0, -60,
+					0, 0, 1, 450,
+				 	0, 0, 1, 0
+				);
 
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
-				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1200 );
-				//camera.position.z = 250; // Here
+				camera1 = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1200 );
 
-				camera.applyMatrix(m2); // Here
+				camera1.applyMatrix(m2); 
+
+
+
+				camera2 = new THREE.PerspectiveCamera( -50, window.innerWidth / window.innerHeight, 1, 1200 );
+
+				camera2.applyMatrix(m4); 
+
 
 
 				scene = new THREE.Scene();
@@ -117,9 +123,6 @@ function trocaCamera2() {
 					scene.add( object );
 					obj1 = object;
 
-
-					//object.position.x = 50; //desloca para direita Here
-					//object.position.y = -100;	//desloca para baixo, apenas para "centralizar" o objeto Here
 				} )
 
  				
@@ -158,16 +161,18 @@ function trocaCamera2() {
 				renderer = new THREE.WebGLRenderer({alpha: true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
-
-			
 			
 		
 			}
 
 
 			function onWindowResize() {
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+				camera1.aspect = window.innerWidth / window.innerHeight;
+				camera1.updateProjectionMatrix();
+
+				camera2.aspect = window.innerWidth / window.innerHeight;
+				camera2.updateProjectionMatrix();
+
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			}	
 
@@ -181,11 +186,23 @@ function trocaCamera2() {
 
 			function render() {
 
-				//requestAnimationFrame( render );				
-				obj1.rotation.z += 0.01;	//rotacao do cubo, como eh super simples, eu deixei
-				obj3.rotation.z += 0.01;	//rotacao do cubo, como eh super simples, eu deixei
+				obj1.rotation.z += 0.01;	
+				obj3.rotation.z += 0.01;
 
-				renderer.render( scene, camera );
+				if( qualcamera ==1 )
+					renderer.render( scene, camera1 );
+				if(qualcamera == 2)
+					renderer.render( scene, camera2 );
+
+			}
+			function trocaCamera1() {
+				//alert("CAMERA 1 LIGADA");
+			    qualcamera = 1;
+			}
+
+			function trocaCamera2() {
+				//alert("CAMERA 2 LIGADA");
+			    qualcamera =2;
 			}
 
 		</script>
