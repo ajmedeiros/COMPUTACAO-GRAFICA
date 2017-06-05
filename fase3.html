@@ -73,18 +73,18 @@
 
 				m2 = new THREE.Matrix4();
 				m2.set(
-					1, 0, 0, -30,
-					0, 1, 0, -40,
+					1, 0, 0, 0,
+					0, 1, 0, 0,
 					0, 0, 1, 350,
 				 	0, 0, 0, 1
 				);
 
 				m4 = new THREE.Matrix4();
 				m4.set(
-					1, 0, 0, 80,
-					0, 1, 0, -60,
-					0, 0, 1, 450,
-				 	0, 0, 1, 0
+					1, 0, 0, 0,
+					0, 1, 0, 0,
+					0, 0, 1, -350,
+				 	0, 0, 0, 1
 				);
 
 				m5 = new THREE.Matrix4();
@@ -98,16 +98,15 @@
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
+				var v = new THREE.Vector3 (0, 0, 0);
+
 				camera1 = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1200 );
-
 				camera1.applyMatrix(m2); 
-
-
+				camera1.lookAt(v);
 
 				camera2 = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 1200 );
-
 				camera2.applyMatrix(m4); 
-
+				camera2.lookAt(v);
 
 
 				scene = new THREE.Scene();
@@ -212,7 +211,7 @@
 
 			function trocaCamera2() {
 				//alert("CAMERA 2 LIGADA");
-			    qualcamera =2;
+			    qualcamera = 2;
 			}
 
 		</script>
