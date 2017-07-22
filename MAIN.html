@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>COMPUTACAO GRAFICA - SPIN MODEL</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background:#000;
+				color: #eee;
+				padding:0;
+				margin:0;
+				font-weight:bold;
+				overflow:hidden;
+
+				font-family:Monospace;
+				font-size:10px;
+				text-align:center;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+				z-index:100;
+			}
+
+			a {
+				color: #cc6655;
+			}
+
+			b { color:orange }
+		</style>
+	</head>
+
+	<body>
+		<div id="info"><a href="https://github.com/ajmedeiros/COMPUTACAO-GRAFICA/" target="_blank" rel="noopener">Computação Gráfica 2017-1 - Projeto Final</a><br/>
+		<b>WASD</b> mover (x, z), <b>R|F</b> mover (y), <b>Q|E</b> girar, <b>Setas|Mouse</b> direcao e sentido, <b>+|- </b>zoom, 
+		<b>1|2|3|4|5 </b> cameras <br/>
+		</div>
+		
+		<script src="three.js"></script>
+		<script src="OBJLoader.js"></script>
+		<script src="MTLLoader.js"></script>
+		<script src="FlyControls.js"></script>
+		<script src="Estrelas.js"></script>
+		<script src="Orbita.js"></script>
+		<script src="Cometa.js"></script>
+		<script src="Camera.js"></script>
+		
+		<script>
+			var container, cameras = [], indiceCamera = 0, scene, renderer, controls;
+			var obj = [], dummy, cometa = [];	
+			var teta = 180, beta = 0;
+			
+			init();
+			animate();
+			
+			function init() {
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				
+				//-----------CAMERA E ILUMINACAO-----------------------------//
+				inicializaCameras();
+				
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x000000 );
+				
+				var ambient = new THREE.AmbientLight( 0x665544);
+				scene.add(ambient);
+				
+				var light = new THREE.PointLight( 0xffffcc, 5, 50000 );
+				light.position.set( 0, 10000, -30000 );
+				scene.add( light );
+				
+				//---------------CARREGANDO OBJETOS DA MEMORIA---------------------------//
+				obj.push (objLoader ('quad/', 'quad.mtl', 'quad.obj'));
+				obj[0].rotateY (Math.PI);
+				obj[0].scale.multiplyScalar (1/50);
+				scene.add (obj[0]);
+				
+				obj.push (objLoader ('earth/', 'earth.mtl', 'earth.obj'));
+				obj[1].position.set (10000, 2500, -10000);
+				obj[1].scale.multiplyScalar (10);
+				scene.add (obj[1]);
+				
+				obj.push (objLoader ('moon/', 'moon.mtl', 'moon.obj'));
+				obj[2].scale.multiplyScalar (300);
+				obj[2].rotateX (-Math.PI/2);
+				scene.add (obj[2]);
+				
+				var tamanhoAstronauta = 10;
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[3].scale.multiplyScalar(tamanhoAstronauta);
+				scene.add (obj[3]);
+				
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[4].scale.multiplyScalar(tamanhoAstronauta);
+				scene.add (obj[4]);
+				
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[5].scale.multiplyScalar(tamanhoAstronauta);
+				scene.add (obj[5]);
+				
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[6].scale.multiplyScalar(tamanhoAstronauta);
+				scene.add (obj[6]);
+				
+				//-----------------CONFIGURANDO CONTROLE DE VOO--------------------------//
+				dummy = new THREE.Object3D();
+				scene.add (dummy);
+				dummy.add (cameras[0]);
+				dummy.add (obj[0]);
+				controls = new THREE.FlyControls( dummy );
+				controls.movementSpeed = 10;
+				controls.rollspeed = 0.10;
+				controls.domElement = container;
+				controls.dragToLook = true;
+				
+				//--------------ADICIONANDO ESTRELAS À CENA---------------------------//
+				criaEstrelas (5000);
+				criaCometas (100);
+				
+				//------------------------LENS FLARE---------------------------------//
+				var textureLoader = new THREE.TextureLoader();
+				var textureFlare = textureLoader.load( "lensflare/lensflare.png" );
+				var lensFlare = new THREE.LensFlare( textureFlare, 1000, 0, THREE.AdditiveBlending );
+				lensFlare.position.copy( light.position );
+				scene.add( lensFlare );
+				
+				//----------------------FORMA SIMPLES COM TEXTURA (Planeta Quom)-----------------------------------//
+				var textura = new THREE.MeshPhongMaterial( {
+					specular: 0x020201,
+					shininess: 5,
+					reflectivity: .01,
+					map: textureLoader.load( "Quom/Quom.png" ),
+				} );
+
+				var esfera = new THREE.SphereGeometry( 4000, 200, 200 );
+				obj.push(new THREE.Mesh( esfera, textura ));
+				obj[7].position.set (-10000, 2500, -10000);
+				scene.add( obj[7] );
+				
+				
+				//--------------------------EIXOS X Y Z----------------------------------//
+				scene.add( new THREE.AxisHelper( 1e7 ) );
+				scene.add( new THREE.AxisHelper( -1e7 ) );
+				
+				
+				//-----------------------RENDERIZAÇÃO--------------------------------//
+				renderer = new THREE.WebGLRenderer({alpha: true});
+				renderer.setClearColor( 0x000000, 1);
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+			}
+			
+			function objLoader (endereco, nomeMtl, nomeObj) {
+				var mtlLoader = new THREE.MTLLoader();
+				var objLoader = new THREE.OBJLoader();
+				var container = new THREE.Object3D();
+				
+				mtlLoader.setPath (endereco);
+				mtlLoader.load(nomeMtl, function ( materials ){
+					objLoader.setPath (endereco);
+					materials.preload();
+					objLoader.setMaterials( materials );
+					objLoader.load(nomeObj, function ( object ) {
+						container.add (object);
+					});
+				});
+				return container;
+			}
+			
+			function animate () {
+				requestAnimationFrame( animate );
+				alteraCamera();
+				controls.update(1);
+				atualizaCometas ();
+				terraLua();
+				render();
+			}
+
+			function render() {
+				renderer.render(scene, cameras[indiceCamera]);
+			}
+		</script>
+	</body>
+</html>
