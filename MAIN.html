@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>COMPUTACAO GRAFICA - SPIN MODEL</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background:#000;
+				color: #eee;
+				padding:0;
+				margin:0;
+				font-weight:bold;
+				overflow:hidden;
+
+				font-family:Monospace;
+				font-size:10px;
+				text-align:center;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+				z-index:100;
+			}
+
+			a {
+				color: #cc6655;
+			}
+
+			b { color:orange }
+		</style>
+	</head>
+
+	<body>
+		<div id="info"><a href="https://github.com/ajmedeiros/COMPUTACAO-GRAFICA/" target="_blank" rel="noopener">Computação Gráfica 2017-1 - Projeto Final</a><br/>
+		<b>WASD</b> mover (x, z), <b>R|F</b> mover (y), <b>Q|E</b> girar, <b>Setas|Mouse</b> direcao e sentido, <b>+|- </b>zoom, 
+		<b>1|2|3|4|5|6|7|8|9 </b> cameras, <b>backspace</b>  exibir/ocultar eixos<br/>
+		</div>
+		
+		<script src="three.js"></script>
+		<script src="OBJLoader.js"></script>
+		<script src="MTLLoader.js"></script>
+		<script src="FlyControls.js"></script>
+		<script src="Estrelas.js"></script>
+		<script src="Orbita.js"></script>
+		<script src="Cometa.js"></script>
+		<script src="Camera.js"></script>
+
+		<script id="fragmentShader" type="x-shader/x-fragment">
+
+			uniform float time;
+			uniform vec2 resolution;
+
+			uniform float fogDensity;
+			uniform vec3 fogColor;
+
+			uniform sampler2D texture1;
+			uniform sampler2D texture2;
+
+			varying vec2 vUv;
+
+			void main( void ) {
+
+				vec2 position = -1.0 + 2.0 * vUv;
+
+				vec4 noise = texture2D( texture1, vUv );
+				vec2 T1 = vUv + vec2( 1.5, -1.5 ) * time  *0.02;
+				vec2 T2 = vUv + vec2( -0.5, 2.0 ) * time * 0.01;
+
+				T1.x += noise.x * 2.0;
+				T1.y += noise.y * 2.0;
+				T2.x -= noise.y * 0.2;
+				T2.y += noise.z * 0.2;
+
+				float p = texture2D( texture1, T1 * 2.0 ).a;
+
+				vec4 color = texture2D( texture2, T2 * 2.0 );
+				vec4 temp = color * ( vec4( p, p, p, p ) * 2.0 ) + ( color * color - 0.1 );
+
+				if( temp.r > 1.0 ){ temp.bg += clamp( temp.r - 2.0, 0.0, 100.0 ); }
+				if( temp.g > 1.0 ){ temp.rb += temp.g - 1.0; }
+				if( temp.b > 1.0 ){ temp.rg += temp.b - 1.0; }
+
+				gl_FragColor = temp;
+
+				float depth = gl_FragCoord.z / gl_FragCoord.w;
+				const float LOG2 = 1.442695;
+				float fogFactor = exp2( - fogDensity * fogDensity * depth * depth * LOG2 );
+				fogFactor = 1.0 - clamp( fogFactor, 0.0, 1.0 );
+
+				gl_FragColor = mix( gl_FragColor, vec4( fogColor, gl_FragColor.w ), fogFactor );
+
+			}
+
+		</script>
+
+		<script id="vertexShader" type="x-shader/x-vertex">
+
+			uniform vec2 uvScale;
+			varying vec2 vUv;
+
+			void main()
+			{
+
+				vUv = uvScale * uv;
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				gl_Position = projectionMatrix * mvPosition;
+
+			}
+
+		</script>
+		
+		
+		<script>
+			var container, cameras = [], indiceCamera = 0, scene, renderer, controls;
+			var obj = [], dummy, cometa = [];	
+			var teta = 180, beta = 0, tamanhoAstronauta = 10;
+			var eixo1 = new THREE.AxisHelper( 1e7 ), eixo2 = new THREE.AxisHelper( -1e7 ), eixo = -1;
+			var uniforms;
+			var mixer;
+			var bezier, u = 0, dir = 1;
+			
+			init();
+			animate();
+			
+			function init() {
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+				
+				//-----------CAMERA E ILUMINACAO-----------------------------//
+				inicializaCameras();
+				
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x000000 );
+				
+				var ambient = new THREE.AmbientLight( 0x665544);
+				scene.add(ambient);
+				
+				var light = new THREE.PointLight( 0xffffcc, 5, 50000 );
+				light.position.set( 0, 10000, -30000 );
+				scene.add( light );
+				
+				//---------------CARREGANDO OBJETOS DA MEMORIA---------------------------//
+				obj.push (objLoader ('quad/', 'quad.mtl', 'quad.obj'));
+				obj[0].rotateY (Math.PI);
+				obj[0].scale.multiplyScalar (1/50);
+				scene.add (obj[0]);
+				
+				obj.push (objLoader ('earth/', 'earth.mtl', 'earth.obj'));
+				obj[1].position.set (13000, 2500, -10000);
+				obj[1].scale.multiplyScalar (10);
+				scene.add (obj[1]);
+				
+				obj.push (objLoader ('moon/', 'moon.mtl', 'moon.obj'));
+				obj[2].scale.multiplyScalar (300);
+				obj[2].rotateX (-Math.PI/2);
+				scene.add (obj[2]);
+				
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[3].scale.multiplyScalar(tamanhoAstronauta);
+				obj[3].add (cameras[7]);
+				scene.add (obj[3]);
+				
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[4].scale.multiplyScalar(tamanhoAstronauta);
+				obj[4].add (cameras[4]);
+				scene.add (obj[4]);
+				
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[5].scale.multiplyScalar(tamanhoAstronauta);
+				obj[5].add (cameras[5]);
+				scene.add (obj[5]);
+				
+				obj.push(objLoader ('astronaut/', 'astronaut.mtl', 'astronaut.obj'));
+				obj[6].scale.multiplyScalar(tamanhoAstronauta);
+				obj[6].add (cameras[6]);
+				scene.add (obj[6]);
+				
+				//-----------------CONFIGURANDO CONTROLE DE VOO--------------------------//
+				dummy = new THREE.Object3D();
+				scene.add (dummy);
+				dummy.add (cameras[0]);
+				dummy.add (obj[0]);
+				controls = new THREE.FlyControls( dummy );
+				controls.movementSpeed = 100;
+				controls.rollspeed = 0.3;
+				controls.domElement = container;
+				controls.dragToLook = true;
+				
+				//--------------ADICIONANDO ESTRELAS À CENA---------------------------//
+				criaEstrelas (5000);
+				criaCometas (100);
+				
+				//------------------------LENS FLARE---------------------------------//
+				var textureLoader = new THREE.TextureLoader();
+				var textureFlare = textureLoader.load( "lensflare/lensflare.png" );
+				var lensFlare = new THREE.LensFlare( textureFlare, 1000, 0, THREE.AdditiveBlending );
+				lensFlare.position.copy( light.position );
+				scene.add( lensFlare );
+				
+				//-------------------FORMA SIMPLES COM TEXTURA (Planeta Quom)-------------//
+				var textura = new THREE.MeshPhongMaterial( {
+					color: 0x666666,
+					specular: 0x000000,
+					shininess: 5,
+					reflectivity: .01,
+					map: textureLoader.load( "Quom/Quom.png" ),
+				} );
+
+				var esfera = new THREE.SphereGeometry( 4000, 200, 200 );
+				obj.push(new THREE.Mesh( esfera, textura ));
+				obj[7].position.set (-13000, 2500, -10000);
+				scene.add( obj[7] );
+							
+				//--------------------SHADER LAVA (Planeta Magnus)---Tbm eh forma simples---//
+				esfera = new THREE.SphereGeometry( 2500, 200, 200 );
+
+				uniforms = {
+
+					time:       { value: 1.0 },
+					resolution: { value: new THREE.Vector2() },
+					uvScale:    { value: new THREE.Vector2( 3.0, 1.0 ) },
+					texture1:   { value: textureLoader.load( "lava/cloud.png" ) },
+					texture2:   { value: textureLoader.load( "lava/lavatile.jpg" ) }
+
+				};
+				
+				uniforms.texture1.value.wrapS = uniforms.texture1.value.wrapT = THREE.RepeatWrapping;
+				uniforms.texture2.value.wrapS = uniforms.texture2.value.wrapT = THREE.RepeatWrapping;
+
+				var material = new THREE.ShaderMaterial( {
+
+					uniforms: uniforms,
+					vertexShader: document.getElementById( 'vertexShader' ).textContent,
+					fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+
+				} );
+
+				obj.push ( new THREE.Mesh( esfera, material ));
+				obj[8].position.set (-2500, 5000, -25000);
+				scene.add( obj[8] );
+				
+				textura = new THREE.MeshPhongMaterial( {
+					color: 0xffaa00,
+					specular: 0x000000,
+					shininess: 50,
+					reflectivity: 1,
+					map: textureLoader.load( "Magnus/moon.png" ),
+					normalMap: textureLoader.load ("Magnus/moon.png"),
+				} );
+				
+				esfera = new THREE.SphereGeometry (500, 50, 50);
+				
+				obj.push (new THREE.Mesh (esfera, textura));
+				scene.add (obj[9]);
+				
+				//-----------------LUA PLANETA QUOM-----------Tbm eh forma simples------//
+				textura = new THREE.MeshPhongMaterial( {
+					color: 0x888888,
+					specular: 0x000000,
+					shininess: 5,
+					reflectivity: .01,
+					map: textureLoader.load( "Quom/moon.jpg" ),
+				} );
+				
+				esfera = new THREE.SphereGeometry (750, 50, 50);
+				
+				obj.push (new THREE.Mesh (esfera, textura));
+				scene.add (obj[10]);
+				
+				//---------------OBJETO ARTICULADO------------------//
+				mixer = new THREE.AnimationMixer( scene );
+
+				var loader = new THREE.JSONLoader();
+				loader.load( 'articulado/monster.js', function ( geometry, materials ) {
+
+					var material = materials[ 0 ];
+					material.morphTargets = true;
+
+					var mesh = new THREE.Mesh( geometry, materials );
+					mesh.scale.set( .1, .1, .1 );
+					
+					mesh.position.x = obj[7].position.x;
+					mesh.position.y = obj[7].position.y + 4000;
+					mesh.position.z = obj[7].position.z;
+					
+					scene.add (mesh);
+					
+					mixer.clipAction( geometry.animations[ 0 ], mesh )
+							.setDuration( 1 )			
+							.startAt( - Math.random() )	
+							.play();					
+				} );
+				
+				//--------------------CURVA DE BÉZIER-------------------------//
+				var curva = new THREE.CubicBezierCurve3(
+					new THREE.Vector3( -15000, 0, 0 ),
+					new THREE.Vector3( 0, 15000, 0 ),
+					new THREE.Vector3( 0, 0, 15000 ),
+					new THREE.Vector3( 15000, 0, 0 )
+				);
+
+				bezier = new THREE.Geometry();
+				bezier.vertices = curva.getPoints( 500 );
+				
+				//-----------------------RENDERIZAÇÃO--------------------------------//
+				renderer = new THREE.WebGLRenderer({alpha: true});
+				renderer.setClearColor( 0x000000, 1);
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+				
+				onWindowResize();
+			}
+			
+			function onWindowResize( event ) {
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				uniforms.resolution.value.x = renderer.domElement.width;
+				uniforms.resolution.value.y = renderer.domElement.height;
+
+			}
+			
+			function objLoader (endereco, nomeMtl, nomeObj) {
+				var mtlLoader = new THREE.MTLLoader();
+				var objLoader = new THREE.OBJLoader();
+				var container = new THREE.Object3D();
+				
+				mtlLoader.setPath (endereco);
+				mtlLoader.load(nomeMtl, function ( materials ){
+					objLoader.setPath (endereco);
+					materials.preload();
+					objLoader.setMaterials( materials );
+					objLoader.load(nomeObj, function ( object ) {
+						container.add (object);
+					});
+				});
+				return container;
+			}
+			
+			function animate () {
+				requestAnimationFrame( animate );
+				alteraCamera();
+				controls.update(1);
+				atualizaCometas();
+				terraLua();
+				render();
+			}
+
+			function render() {
+				mixer.update (0.01);
+				uniforms.time.value += 0.02;
+				renderer.render(scene, cameras[indiceCamera]);
+			}
+			
+		</script>
+	</body>
+</html>

@@ -1,0 +1,29 @@
+# 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
+# File Created: 25.01.2016 02:22:51
+
+newmtl visor
+	Ns 10.0000
+	Ni 1.5000
+	d 1.0000
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka .2 .2 .2
+	Kd .5 .5 .5
+	Ks .8 .8 .8
+	map_Ka Visor_D.png
+	map_Kd Visor_D.png
+
+newmtl astronaut
+	Ns 10.0000
+	Ni 1.5000
+	d 1
+	Tr 0.0000
+	Tf 1.0000 1.0000 1.0000 
+	illum 2
+	Ka 0.5882 0.5882 0.5882
+	Kd 0.5882 0.5882 0.5882
+	Ks 0.0000 0.0000 0.0000
+	map_Ka Spacesuit_D.png
+	map_Kd Spacesuit_D.png
+	map_d Spacesuit_N.png
